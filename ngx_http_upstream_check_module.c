@@ -3016,20 +3016,28 @@ ngx_http_upstream_check_status_prometheus_format(ngx_buf_t *b,
             }
         }
 
-        b->last = ngx_snprintf(b->last, b->end - b->last,
-                "# HELP nginx_check_peer_status peer status \n"
-                "# TYPE nginx_check_peer_status gauge\n"
+        b->last = ngx_snprintf(b->last, b->end - b->last,                 
+                "%s"
                 "nginx_check_peer_status{upstream=\"%V\", peer=\"%V\", type=\"%V\"}"
-                "%ui\n"
-                "# HELP nginx_check_peer_rise_count peer rise count \n"
-                "# TYPE nginx_check_peer_rise_count gauge\n"
+                " %ui\n"
+
+                "%s"
                 "nginx_check_peer_rise_count{upstream=\"%V\", peer=\"%V\"} %ui\n"
-                "# HELP nginx_check_peer_fall_count peer fall count \n"
-                "# TYPE nginx_check_peer_fall_count gauge\n"
+
+                "%s"
                 "nginx_check_peer_fall_count{upstream=\"%V\", peer=\"%V\"} %ui\n",
+        
+                i == 0 ? "# HELP nginx_check_peer_status peer status\n"
+                "# TYPE nginx_check_peer_status gauge\n" : "",
                 peer[i].upstream_name, &peer[i].peer_addr->name, &peer[i].conf->check_type_conf->name,
-                peer[i].shm->down ? 0 : 1,
+                peer[i].shm->down ? (ngx_uint_t)0 : (ngx_uint_t)1,
+
+                i == 0 ? "# HELP nginx_check_peer_rise_count peer rise count\n"
+                "# TYPE nginx_check_peer_rise_count counter\n" : "",
                 peer[i].upstream_name, &peer[i].peer_addr->name, peer[i].shm->rise_count,
+
+                i == 0 ? "# HELP nginx_check_peer_fall_count peer fall count\n"
+                "# TYPE nginx_check_peer_fall_count counter\n" : "",
                 peer[i].upstream_name, &peer[i].peer_addr->name, peer[i].shm->fall_count);
     }
 }
